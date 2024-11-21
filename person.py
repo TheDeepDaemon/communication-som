@@ -8,7 +8,7 @@ from language_decoder import LanguageDecoder
 class Person(nn.Module):
 
     def __init__(
-            self, concept_size, hidden_size, language_size):
+            self, concept_size, hidden_size, message_size):
         super(Person, self).__init__()
 
         self.perceived_concept = torch.zeros(concept_size)
@@ -16,10 +16,10 @@ class Person(nn.Module):
         self.language_encoder = LanguageEncoder(
             concept_size=concept_size,
             hidden_size=hidden_size,
-            language_size=language_size)
+            message_size=message_size)
 
         self.language_decoder = LanguageDecoder(
-            language_size=language_size,
+            message_size=message_size,
             hidden_size=hidden_size,
             concept_size=concept_size)
 

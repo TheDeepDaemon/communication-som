@@ -13,7 +13,7 @@ class PopulationGrid(PopulationGraph):
             cols: int,
             concept_size: int,
             hidden_size: int,
-            language_size: int,
+            message_size: int,
             criterion,
             connection_type: str,
             comm_type: str,
@@ -24,13 +24,13 @@ class PopulationGrid(PopulationGraph):
         self.cols = cols
 
         self.concept_size = concept_size
-        self.language_size = language_size
+        self.message_size = message_size
 
         population = self.init_population(
-            concept_size,
-            hidden_size,
-            language_size,
-            connection_type)
+            concept_size=concept_size,
+            hidden_size=hidden_size,
+            message_size=message_size,
+            connection_type=connection_type)
 
         super(PopulationGrid, self).__init__(
             population=population,
@@ -49,7 +49,7 @@ class PopulationGrid(PopulationGraph):
             self,
             concept_size: int,
             hidden_size: int,
-            language_size: int,
+            message_size: int,
             connection_type: str):
 
         population = []
@@ -65,7 +65,7 @@ class PopulationGrid(PopulationGraph):
                 new_person = Person(
                     concept_size,
                     hidden_size,
-                    language_size)
+                    message_size)
 
                 # add to this row
                 population_row.append(new_person)
@@ -141,7 +141,7 @@ class PopulationGrid(PopulationGraph):
 
         dataset_size = len(test_dataset)
 
-        output_collection = torch.zeros((dataset_size, self.rows, self.cols, self.language_size))
+        output_collection = torch.zeros((dataset_size, self.rows, self.cols, self.message_size))
 
         self.eval()
 

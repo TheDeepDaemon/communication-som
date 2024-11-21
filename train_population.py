@@ -1,8 +1,12 @@
 import torch
+from torch.utils.data import DataLoader
 from population_graph import PopulationGraph
 
 
-def train_population(model: PopulationGraph, train_loader, optimizer, epochs):
+def train_population(model: PopulationGraph, train_dataset, optimizer, epochs, batch_size):
+
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+
     model.train()
     for epoch in range(epochs):
         running_loss = 0.0

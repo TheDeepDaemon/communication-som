@@ -4,10 +4,8 @@ import torch.optim as optim
 from population_grid import PopulationGrid
 from train_population import train_population
 from load_mnist import load_mnist_data
+from synthetic_dataset import create_synthetic_data
 from display_population import display_population
-from torch.utils.data import DataLoader
-from synthetic_dataset import SyntheticDataset
-import math
 from assess_neighbors import average_hv_difference, average_diag_difference
 
 
@@ -17,29 +15,30 @@ def main():
     COLS = 5
     EPOCHS = 10
 
-    TEST_DATASET_SIZE = 100
+    TEST_BATCH_SIZE = 100
 
-    CONCEPT_SIZE = 28*28
-    HIDDEN_SIZE = 2**(int(math.log2(CONCEPT_SIZE**(1/2))) + 2)
+    USE_SYNTHETIC_DATA = True
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    #train_dataset, test_dataset = load_mnist_data()
+    if USE_SYNTHETIC_DATA:
 
+        CONCEPT_SIZE = 128
+        HIDDEN_SIZE = 32
 
-    train_dataset = SyntheticDataset(
-        size=5_000,
-        num_dimensions=CONCEPT_SIZE,
-        num_clusters=6,
-        std_dev=0.15)
+        train_dataset, test_dataset = create_synthetic_data(
+            train_size=5_000,
+            test_size=TEST_BATCH_SIZE,
+            num_dimensions=CONCEPT_SIZE,
+            num_clusters=10,
+            std_dev=0.15)
 
-    test_dataset = SyntheticDataset(
-        size=TEST_DATASET_SIZE,
-        num_dimensions=CONCEPT_SIZE,
-        num_clusters=6,
-        std_dev=0.15)
+    else:
 
-    train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
+        CONCEPT_SIZE = 28*28
+        HIDDEN_SIZE = 64
+
+        train_dataset, test_dataset = load_mnist_data()
 
     criterion = nn.MSELoss()
 
@@ -48,7 +47,7 @@ def main():
         cols=COLS,
         concept_size=CONCEPT_SIZE,
         hidden_size=HIDDEN_SIZE,
-        language_size=32,
+        message_size=6,
         criterion=criterion,
         connection_type='neighbors adj',
         comm_type='weighted',
@@ -56,11 +55,11 @@ def main():
 
     optimizer = optim.Adam(population_grid.parameters(), lr=0.001)
 
-    train_population(population_grid, train_loader, optimizer, epochs=EPOCHS)
+    train_population(population_grid, train_dataset=train_dataset, optimizer=optimizer, epochs=EPOCHS, batch_size=64)
 
-    display_population(population=population_grid, test_dataset=test_dataset, batch_size=TEST_DATASET_SIZE)
+    display_population(population=population_grid, test_dataset=test_dataset, batch_size=TEST_BATCH_SIZE)
 
-    grid_data = population_grid.get_output_grid(test_dataset=test_dataset, batch_size=TEST_DATASET_SIZE)
+    grid_data = population_grid.get_output_grid(test_dataset=test_dataset, batch_size=TEST_BATCH_SIZE)
 
     direct_diff = 0
     diagonal_diff = 0
