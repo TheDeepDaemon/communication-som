@@ -1,60 +1,120 @@
-import torch.nn as nn
 from person import Person
+from population_graph import PopulationGraph
+import numpy as np
 
 
-class PopulationGrid(nn.Module):
+class PopulationGrid(PopulationGraph):
 
-    def __init__(self, rows, cols, concept_size, hidden_size, language_size):
-        super(PopulationGrid, self).__init__()
+    def __init__(
+            self,
+            rows: int,
+            cols: int,
+            concept_size: int,
+            hidden_size: int,
+            language_size: int,
+            criterion,
+            connection_type: str,
+            comm_type: str,
+            self_talk: bool=True
+    ) -> None:
+
         self.rows = rows
         self.cols = cols
+
         self.concept_size = concept_size
+        self.language_size = language_size
 
-        self.population = []
-        self.models = nn.ModuleList()
+        population = self.init_population(
+            concept_size,
+            hidden_size,
+            language_size,
+            connection_type)
 
-        for _ in range(rows):
+        super(PopulationGrid, self).__init__(
+            population=population,
+            criterion=criterion,
+            comm_type=comm_type,
+            self_talk=self_talk)
+
+    def in_grid_bounds(self, row_index: int, col_index: int) -> bool:
+        return (
+                (row_index >= 0) and
+                (col_index >= 0) and
+                (row_index < self.rows) and
+                (col_index < self.cols))
+
+    def init_population(
+            self,
+            concept_size: int,
+            hidden_size: int,
+            language_size: int,
+            connection_type: str):
+
+        population = []
+
+        self.population_grid = []
+
+        # actually create the grid with population members
+        for i in range(self.rows):
             population_row = []
-            for _ in range(cols):
-                new_person = Person(concept_size, hidden_size, language_size)
+            for j in range(self.cols):
+
+                # init the person object
+                new_person = Person(
+                    concept_size,
+                    hidden_size,
+                    language_size)
+
+                # add to this row
                 population_row.append(new_person)
-                self.models.append(new_person)
-            self.population.append(population_row)
 
-        for i in range(rows):
-            for j in range(cols):
+                # add this to all models (so it tracks the parameters)
+                population.append(new_person)
 
-                if i < rows - 1:
-                    self.population[i][j].add_neighbor(self.population[i+1][j])
+            # add the whole row
+            self.population_grid.append(population_row)
 
-                if i > 0:
-                    self.population[i][j].add_neighbor(self.population[i-1][j])
+        # connect to other people based on the communication type
+        if connection_type == 'neighbors even':
+            for i in range(self.rows):
+                for j in range(self.cols):
 
-                if j < cols - 1:
-                    self.population[i][j].add_neighbor(self.population[i][j+1])
+                    neighbors = []
+                    for k in range(-1, 2):
+                        for l in range(-1, 2):
+                            if (k != 0) or (l != 0):
+                                row_index = i + k
+                                col_index = j + l
+                                if self.in_grid_bounds(row_index, col_index):
+                                    neighbors.append(self.population_grid[row_index][col_index])
 
-                if j > 0:
-                    self.population[i][j].add_neighbor(self.population[i][j-1])
+                    self.population_grid[i][j].set_neighbors(
+                        neighbors=neighbors,
+                        weightings=np.ones(len(neighbors), dtype=float))
+        elif connection_type == 'all dist': # connect all nodes, make them distance weighted
+            for i in range(self.rows):
+                for j in range(self.cols):
+                    this_pos = np.array([j, i], dtype=float)
 
-    def step(self, concept, criterion):
-        self.train()
+                    neighbors = []
+                    weightings = []
 
-        for i in range(self.rows):
-            for j in range(self.cols):
-                self.population[i][j].set_concept(concept=concept)
+                    for k in range(self.rows):
+                        for l in range(self.cols):
 
-        loss = 0
+                            if (i != k) or (j != l):
 
-        for i in range(self.rows):
-            for j in range(self.cols):
-                person = self.population[i][j]
+                                neighbors.append(self.population_grid[k][l])
 
-                # pick a neighbor to describe the concept
-                communicated_concept = person.receive_from_neighbor()
-                loss += criterion(communicated_concept, person.perceived_concept)
+                                other_pos = np.array([l, k], dtype=float)
+                                dist = np.linalg.norm(this_pos - other_pos)
+                                weighting = np.exp(-dist)
+                                weightings.append(weighting)
 
-                # have the person talk to themself, it should match
-                self_communicated_concept = person.self_talk()
-                loss += criterion(self_communicated_concept, person.perceived_concept)
+                    self.population_grid[i][j].set_neighbors(
+                        neighbors=neighbors,
+                        weightings=np.array(weightings, dtype=float))
 
-        return loss
+        return population
+
+
