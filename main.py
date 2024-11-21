@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from person import Person
 from population_grid import PopulationGrid
 from train_population import train_population
 from load_mnist import load_mnist_data
@@ -20,12 +19,13 @@ def main():
 
     TEST_DATASET_SIZE = 100
 
-    CONCEPT_SIZE = 100
+    CONCEPT_SIZE = 28*28
     HIDDEN_SIZE = 2**(int(math.log2(CONCEPT_SIZE**(1/2))) + 2)
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     #train_dataset, test_dataset = load_mnist_data()
+
 
     train_dataset = SyntheticDataset(
         size=5_000,
@@ -48,7 +48,7 @@ def main():
         cols=COLS,
         concept_size=CONCEPT_SIZE,
         hidden_size=HIDDEN_SIZE,
-        language_size=10,
+        language_size=32,
         criterion=criterion,
         connection_type='neighbors adj',
         comm_type='weighted',
