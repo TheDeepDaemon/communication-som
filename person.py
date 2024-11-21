@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 from language_encoder import LanguageEncoder
 from language_decoder import LanguageDecoder
-import random
+
 
 class Person(nn.Module):
 
