@@ -55,6 +55,12 @@ class PopulationGrid(PopulationGraph):
             connection_type: str,
             person_type: str):
 
+        # give feedback about type
+        if person_type == 'invertible':
+            print(f"Using person type: \'invertible\'")
+        else:
+            print(f"Using person type: \'standard\'")
+
         population = []
 
         self.population_grid = []
@@ -66,12 +72,14 @@ class PopulationGrid(PopulationGraph):
 
                 # init the person object
                 if person_type == 'invertible':
+
                     # invertible person
                     new_person = InvertiblePerson(
                         concept_size,
                         hidden_size,
                         message_size)
                 else:
+
                     # default case
                     new_person = StandardPerson(
                         concept_size,

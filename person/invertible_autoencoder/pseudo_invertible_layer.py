@@ -12,8 +12,8 @@ class PseudoInvertibleLayer(InvertibleLayer):
         self.weight = nn.Parameter(torch.randn(out_features, in_features))
 
     def forward(self, x):
-        return x @ self.weight.T
+        weight_pinv = torch.linalg.pinv(self.weight)
+        return x @ weight_pinv
 
     def inverse(self, x):
-        weight_pinv = torch.linalg.pinv(self.weight)
-        return x @ weight_pinv.T
+        return x @ self.weight
