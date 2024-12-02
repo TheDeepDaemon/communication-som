@@ -1,33 +1,30 @@
 import numpy as np
 import torch
 import torch.nn as nn
-from language_encoder import LanguageEncoder
-from language_decoder import LanguageDecoder
+from abc import ABC, abstractmethod
 
 
-class Person(nn.Module):
+class Person(nn.Module, ABC):
 
     def __init__(
-            self, concept_size, hidden_size, message_size):
+            self, concept_size):
         super(Person, self).__init__()
 
         self.perceived_concept = torch.zeros(concept_size)
-
-        self.language_encoder = LanguageEncoder(
-            concept_size=concept_size,
-            hidden_size=hidden_size,
-            message_size=message_size)
-
-        self.language_decoder = LanguageDecoder(
-            message_size=message_size,
-            hidden_size=hidden_size,
-            concept_size=concept_size)
 
         self.neighbors = None
         self.weightings = None
 
         self.has_encoded = False
         self.encoded_message = None
+
+    @abstractmethod
+    def encode(self, x):
+        pass
+
+    @abstractmethod
+    def decode(self, x):
+        pass
 
     def set_concept(self, concept):
         self.perceived_concept = concept
@@ -38,7 +35,7 @@ class Person(nn.Module):
         # encode if hasn't already
         if not self.has_encoded:
             # go through encoder model
-            self.encoded_message = self.language_encoder(self.perceived_concept)
+            self.encoded_message = self.encode(self.perceived_concept)
 
             # update variable
             self.has_encoded = True
@@ -47,7 +44,7 @@ class Person(nn.Module):
         return self.encoded_message
 
     def decode_concept_from_language(self, language_data):
-        return self.language_decoder(language_data)
+        return self.decode(language_data)
 
     def set_neighbors(self, neighbors: list, weightings: np.ndarray):
         self.neighbors = neighbors

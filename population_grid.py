@@ -1,6 +1,6 @@
 import torch
 import numpy as np
-from person import Person
+from person import StandardPerson, InvertiblePerson
 from population_graph import PopulationGraph
 from torch.utils.data import DataLoader
 
@@ -17,7 +17,8 @@ class PopulationGrid(PopulationGraph):
             criterion,
             connection_type: str,
             comm_type: str,
-            self_talk: bool=True
+            self_talk: bool=True,
+            person_type: str='standard'
     ) -> None:
 
         self.rows = rows
@@ -30,7 +31,8 @@ class PopulationGrid(PopulationGraph):
             concept_size=concept_size,
             hidden_size=hidden_size,
             message_size=message_size,
-            connection_type=connection_type)
+            connection_type=connection_type,
+            person_type=person_type)
 
         super(PopulationGrid, self).__init__(
             population=population,
@@ -50,7 +52,8 @@ class PopulationGrid(PopulationGraph):
             concept_size: int,
             hidden_size: int,
             message_size: int,
-            connection_type: str):
+            connection_type: str,
+            person_type: str):
 
         population = []
 
@@ -62,10 +65,18 @@ class PopulationGrid(PopulationGraph):
             for j in range(self.cols):
 
                 # init the person object
-                new_person = Person(
-                    concept_size,
-                    hidden_size,
-                    message_size)
+                if person_type == 'invertible':
+                    # invertible person
+                    new_person = InvertiblePerson(
+                        concept_size,
+                        hidden_size,
+                        message_size)
+                else:
+                    # default case
+                    new_person = StandardPerson(
+                        concept_size,
+                        hidden_size,
+                        message_size)
 
                 # add to this row
                 population_row.append(new_person)
@@ -166,3 +177,32 @@ class PopulationGrid(PopulationGraph):
         data_grid = data_grid.reshape((*data_grid.shape[:2], -1))
 
         return data_grid
+
+    def get_corners_error(self, test_dataset, batch_size):
+
+        self.train()
+
+        test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
+
+        for batch_idx, inputs in enumerate(test_loader):
+
+            concept = torch.flatten(inputs, start_dim=1)
+
+            corner_top_left = self.population_grid[0][0]
+            corner_top_right = self.population_grid[0][-1]
+            corner_bottom_left = self.population_grid[-1][0]
+            corner_bottom_right = self.population_grid[-1][-1]
+
+            corners = [corner_top_left, corner_top_right, corner_bottom_left, corner_bottom_right]
+
+            # pass each concept through the others
+            for i, member_i in enumerate(corners):
+                for j, member_j in enumerate(corners):
+                    if i != j:
+                        # pass a message from one person to the other
+                        member_i.set_concept(concept=concept)
+                        member_j.receive_from(member_i)
+
+        loss = self.loss / self.loss_counter
+        self.loss = 0
+        return float(loss)

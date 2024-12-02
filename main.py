@@ -23,14 +23,14 @@ def main():
 
     if USE_SYNTHETIC_DATA:
 
-        CONCEPT_SIZE = 128
+        CONCEPT_SIZE = 48
         HIDDEN_SIZE = 32
 
         train_dataset, test_dataset = create_synthetic_data(
             train_size=5_000,
             test_size=TEST_BATCH_SIZE,
             num_dimensions=CONCEPT_SIZE,
-            num_clusters=10,
+            num_clusters=4,
             std_dev=0.15)
 
     else:
@@ -47,11 +47,12 @@ def main():
         cols=COLS,
         concept_size=CONCEPT_SIZE,
         hidden_size=HIDDEN_SIZE,
-        message_size=6,
+        message_size=4,
         criterion=criterion,
         connection_type='neighbors adj',
         comm_type='weighted',
-        self_talk=False).to(device)
+        self_talk=False,
+        person_type='invertible').to(device)
 
     optimizer = optim.Adam(population_grid.parameters(), lr=0.001)
 
@@ -63,14 +64,19 @@ def main():
 
     direct_diff = 0
     diagonal_diff = 0
+    count = 0
 
     for i in range(ROWS):
         for j in range(COLS):
             direct_diff += average_hv_difference(grid_data, ROWS, COLS, i, j)
             diagonal_diff += average_diag_difference(grid_data, ROWS, COLS, i, j)
+            count += 1
 
-    print("h or v: ", direct_diff)
-    print("d:      ", diagonal_diff)
+    print("h or v: ", direct_diff / count)
+    print("d:      ", diagonal_diff / count)
+
+    corners_error = population_grid.get_corners_error(test_dataset, batch_size=TEST_BATCH_SIZE)
+    print("corners error: ", corners_error)
 
 
 if __name__ == "__main__":
