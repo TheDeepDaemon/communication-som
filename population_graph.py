@@ -23,7 +23,7 @@ class PopulationGraph(nn.Module):
         for person in self.population:
             # verify they are all people
             if not isinstance(person, Person):
-                raise TypeError("The argument 'population' must only consist of type: Person")
+                raise TypeError("The argument \'population\' must only consist of type: Person")
 
             # set the loss functions
             person.loss_func = self.add_loss
