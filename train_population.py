@@ -21,3 +21,21 @@ def train_population(model: PopulationGraph, train_dataset, optimizer, epochs, b
 
             running_loss += loss.item()
         print(f'Epoch [{epoch + 1}/{epochs}], Loss: {running_loss / len(train_loader):.8f}')
+
+
+def eval_population(model: PopulationGraph, test_dataset, optimizer, epochs, batch_size):
+
+    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
+
+    model.train()
+    for epoch in range(epochs):
+        running_loss = 0.0
+        for inputs in test_loader:
+
+            optimizer.zero_grad()
+
+            loss = model.step(torch.flatten(inputs, start_dim=1))
+
+            running_loss += loss.item()
+
+        print(f'Loss: {format(running_loss / len(test_loader), ".2e")}')

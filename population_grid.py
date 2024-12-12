@@ -11,6 +11,7 @@ class PopulationGrid(PopulationGraph):
             self,
             rows: int,
             cols: int,
+            perception_size: int,
             concept_size: int,
             hidden_size: int,
             message_size: int,
@@ -28,6 +29,7 @@ class PopulationGrid(PopulationGraph):
         self.message_size = message_size
 
         population = self.init_population(
+            perception_size=perception_size,
             concept_size=concept_size,
             hidden_size=hidden_size,
             message_size=message_size,
@@ -49,6 +51,7 @@ class PopulationGrid(PopulationGraph):
 
     def init_population(
             self,
+            perception_size: int,
             concept_size: int,
             hidden_size: int,
             message_size: int,
@@ -75,16 +78,18 @@ class PopulationGrid(PopulationGraph):
 
                     # invertible person
                     new_person = InvertiblePerson(
-                        concept_size,
-                        hidden_size,
-                        message_size)
+                        perception_size=perception_size,
+                        concept_size=concept_size,
+                        hidden_size=hidden_size,
+                        message_size=message_size)
                 else:
 
                     # default case
                     new_person = StandardPerson(
-                        concept_size,
-                        hidden_size,
-                        message_size)
+                        perception_size=perception_size,
+                        concept_size=concept_size,
+                        hidden_size=hidden_size,
+                        message_size=message_size)
 
                 # add to this row
                 population_row.append(new_person)
@@ -213,4 +218,5 @@ class PopulationGrid(PopulationGraph):
 
         loss = self.loss / self.loss_counter
         self.loss = 0
+        self.loss_counter = 0
         return float(loss)

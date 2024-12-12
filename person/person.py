@@ -2,12 +2,13 @@ import numpy as np
 import torch
 import torch.nn as nn
 from abc import ABC, abstractmethod
+import torch.nn.functional as F
 
 
 class Person(nn.Module, ABC):
 
     def __init__(
-            self, concept_size):
+            self, perception_size, concept_size, hidden_size, message_size):
         super(Person, self).__init__()
 
         self.perceived_concept = torch.zeros(concept_size)
@@ -18,6 +19,10 @@ class Person(nn.Module, ABC):
         self.has_encoded = False
         self.encoded_message = None
 
+        self.perception_mat = None
+
+        self.set_perception_function(perception_size=perception_size, concept_size=concept_size)
+
     @abstractmethod
     def encode(self, x):
         pass
@@ -26,8 +31,24 @@ class Person(nn.Module, ABC):
     def decode(self, x):
         pass
 
+    def set_perception_function(self, perception_size, concept_size):
+
+        Q, R = torch.linalg.qr(torch.randn(perception_size, perception_size))
+
+        diagonal_mat = torch.diag(torch.sign(torch.diag(R)))
+
+        orthogonal_mat = Q @ diagonal_mat
+
+        orthogonal_mat = orthogonal_mat[:concept_size].T.clone()
+
+        self.perception_mat = nn.Parameter(orthogonal_mat)
+
+    def perception_function(self, x):
+        x = x @ self.perception_mat
+        return F.leaky_relu(x)
+
     def set_concept(self, concept):
-        self.perceived_concept = concept
+        self.perceived_concept = self.perception_function(concept)
         self.has_encoded = False
 
     def encode_concept_to_language(self):

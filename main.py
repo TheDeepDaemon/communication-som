@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from population_grid import PopulationGrid
-from train_population import train_population
+from train_population import train_population, eval_population
 from load_mnist import load_mnist_data
 from synthetic_dataset import create_synthetic_data
 from display_population import display_population
@@ -17,26 +17,30 @@ def main():
 
     TEST_BATCH_SIZE = 100
 
-    USE_SYNTHETIC_DATA = True
+    USE_SYNTHETIC_DATA = False
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     if USE_SYNTHETIC_DATA:
 
+        PERCEPTION_SIZE = 128
         CONCEPT_SIZE = 48
-        HIDDEN_SIZE = 32
+        HIDDEN_SIZE_CM = 32 # concept-message
+        MESSAGE_SIZE = 8
 
         train_dataset, test_dataset = create_synthetic_data(
             train_size=5_000,
             test_size=TEST_BATCH_SIZE,
-            num_dimensions=CONCEPT_SIZE,
+            num_dimensions=PERCEPTION_SIZE,
             num_clusters=4,
             std_dev=0.15)
 
     else:
 
-        CONCEPT_SIZE = 28*28
-        HIDDEN_SIZE = 64
+        PERCEPTION_SIZE = 28*28
+        CONCEPT_SIZE = 128
+        HIDDEN_SIZE_CM = 64 # concept-message
+        MESSAGE_SIZE = 32
 
         train_dataset, test_dataset = load_mnist_data()
 
@@ -45,14 +49,15 @@ def main():
     population_grid = PopulationGrid(
         rows=ROWS,
         cols=COLS,
+        perception_size=PERCEPTION_SIZE,
         concept_size=CONCEPT_SIZE,
-        hidden_size=HIDDEN_SIZE,
-        message_size=4,
+        hidden_size=HIDDEN_SIZE_CM,
+        message_size=MESSAGE_SIZE,
         criterion=criterion,
         connection_type='neighbors adj',
-        comm_type='weighted',
+        comm_type='rand',
         self_talk=False,
-        person_type='invertible').to(device)
+        person_type='standard').to(device)
 
     optimizer = optim.Adam(population_grid.parameters(), lr=0.001)
 
@@ -72,11 +77,14 @@ def main():
             diagonal_diff += average_diag_difference(grid_data, ROWS, COLS, i, j)
             count += 1
 
-    print("h or v: ", direct_diff / count)
-    print("d:      ", diagonal_diff / count)
+    print(f"(h or v, d): {direct_diff / count}, {diagonal_diff / count}")
 
     corners_error = population_grid.get_corners_error(test_dataset, batch_size=TEST_BATCH_SIZE)
-    print("corners error: ", corners_error)
+
+    eval_population(
+        population_grid, test_dataset=test_dataset, optimizer=optimizer, epochs=1, batch_size=TEST_BATCH_SIZE)
+
+    print(f"(corners error): {format(corners_error, ".2e")}")
 
 
 if __name__ == "__main__":

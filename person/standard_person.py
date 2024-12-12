@@ -5,8 +5,12 @@ from .encoder_decoder import LanguageDecoder
 
 class StandardPerson(Person):
 
-    def __init__(self,  concept_size, hidden_size, message_size):
-        super(StandardPerson, self).__init__(concept_size=concept_size)
+    def __init__(self, perception_size, concept_size, hidden_size, message_size):
+        super(StandardPerson, self).__init__(
+            perception_size=perception_size,
+            concept_size=concept_size,
+            hidden_size=hidden_size,
+            message_size=message_size)
 
         self.language_encoder = LanguageEncoder(
             concept_size=concept_size,

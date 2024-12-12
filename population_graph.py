@@ -54,4 +54,5 @@ class PopulationGraph(nn.Module):
 
         loss = self.loss / self.loss_counter
         self.loss = 0
+        self.loss_counter = 0
         return loss
