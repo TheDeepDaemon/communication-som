@@ -17,6 +17,6 @@ def display_population(population: PopulationGrid, test_dataset, batch_size: int
     transformed -= np.min(transformed)
     transformed /= np.max(transformed)
 
-    #plt.imshow(transformed)
-    #plt.axis('off')
-    #plt.show()
+    plt.imshow(transformed)
+    plt.axis('off')
+    plt.show()

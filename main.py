@@ -24,7 +24,7 @@ def main():
 
     SOCIAL_ENTITY_TYPE = 'standard'
 
-    USE_SELF_TALK = True
+    USE_SELF_TALK = False
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
