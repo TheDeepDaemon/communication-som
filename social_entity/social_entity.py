@@ -5,11 +5,11 @@ from abc import ABC, abstractmethod
 import torch.nn.functional as F
 
 
-class Person(nn.Module, ABC):
+class SocialEntity(nn.Module, ABC):
 
     def __init__(
             self, perception_size, concept_size, hidden_size, message_size):
-        super(Person, self).__init__()
+        super(SocialEntity, self).__init__()
 
         self.perceived_concept = torch.zeros(concept_size)
 

@@ -1,12 +1,12 @@
-from person import Person
+from social_entity import SocialEntity
 from .encoder_decoder import LanguageEncoder
 from .encoder_decoder import LanguageDecoder
 
 
-class StandardPerson(Person):
+class StandardSocialEntity(SocialEntity):
 
     def __init__(self, perception_size, concept_size, hidden_size, message_size):
-        super(StandardPerson, self).__init__(
+        super(StandardSocialEntity, self).__init__(
             perception_size=perception_size,
             concept_size=concept_size,
             hidden_size=hidden_size,

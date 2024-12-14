@@ -1,11 +1,11 @@
-from person import Person
+from social_entity import SocialEntity
 from .invertible_autoencoder import InvertibleAutoencoder, PseudoInvertibleLayer, BiasLayer, InvertibleLeakyReLU
 
 
-class InvertiblePerson(Person):
+class InvertibleSocialEntity(SocialEntity):
 
     def __init__(self, perception_size,  concept_size, hidden_size, message_size):
-        super(InvertiblePerson, self).__init__(
+        super(InvertibleSocialEntity, self).__init__(
             perception_size=perception_size,
             concept_size=concept_size,
             hidden_size=hidden_size,

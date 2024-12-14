@@ -1,6 +1,6 @@
 import torch
 import numpy as np
-from person import StandardPerson, InvertiblePerson
+from social_entity import StandardSocialEntity, InvertibleSocialEntity
 from population_graph import PopulationGraph
 from torch.utils.data import DataLoader
 
@@ -19,7 +19,7 @@ class PopulationGrid(PopulationGraph):
             connection_type: str,
             comm_type: str,
             self_talk: bool=True,
-            person_type: str='standard'
+            social_entity_type: str='standard'
     ) -> None:
 
         self.rows = rows
@@ -34,7 +34,7 @@ class PopulationGrid(PopulationGraph):
             hidden_size=hidden_size,
             message_size=message_size,
             connection_type=connection_type,
-            person_type=person_type)
+            social_entity_type=social_entity_type)
 
         super(PopulationGrid, self).__init__(
             population=population,
@@ -56,13 +56,13 @@ class PopulationGrid(PopulationGraph):
             hidden_size: int,
             message_size: int,
             connection_type: str,
-            person_type: str):
+            social_entity_type: str):
 
         # give feedback about type
-        if person_type == 'invertible':
-            print(f"Using person type: \'invertible\'")
+        if social_entity_type == 'invertible':
+            print(f"Using social entity type: \'invertible\'")
         else:
-            print(f"Using person type: \'standard\'")
+            print(f"Using social entity type: \'standard\'")
 
         population = []
 
@@ -73,11 +73,11 @@ class PopulationGrid(PopulationGraph):
             population_row = []
             for j in range(self.cols):
 
-                # init the person object
-                if person_type == 'invertible':
+                # init the social entity object
+                if social_entity_type == 'invertible':
 
-                    # invertible person
-                    new_person = InvertiblePerson(
+                    # invertible social entity
+                    new_s_entity = InvertibleSocialEntity(
                         perception_size=perception_size,
                         concept_size=concept_size,
                         hidden_size=hidden_size,
@@ -85,17 +85,17 @@ class PopulationGrid(PopulationGraph):
                 else:
 
                     # default case
-                    new_person = StandardPerson(
+                    new_s_entity = StandardSocialEntity(
                         perception_size=perception_size,
                         concept_size=concept_size,
                         hidden_size=hidden_size,
                         message_size=message_size)
 
                 # add to this row
-                population_row.append(new_person)
+                population_row.append(new_s_entity)
 
                 # add this to all models (so it tracks the parameters)
-                population.append(new_person)
+                population.append(new_s_entity)
 
             # add the whole row
             self.population_grid.append(population_row)
@@ -180,9 +180,9 @@ class PopulationGrid(PopulationGraph):
             # iterate through the grid
             for i in range(self.rows):
                 for j in range(self.cols):
-                    person = self.population_grid[i][j]
-                    person.set_concept(concept=concept)
-                    encoded = person.encode_concept_to_language()
+                    s_entity = self.population_grid[i][j]
+                    s_entity.set_concept(concept=concept)
+                    encoded = s_entity.encode_concept_to_language()
                     output_collection[start_idx:end_idx, i, j] = encoded.clone().detach()
 
         output_collection = output_collection.numpy()
@@ -212,7 +212,7 @@ class PopulationGrid(PopulationGraph):
             for i, member_i in enumerate(corners):
                 for j, member_j in enumerate(corners):
                     if i != j:
-                        # pass a message from one person to the other
+                        # pass a message from one social_entity to the other
                         member_i.set_concept(concept=concept)
                         member_j.receive_from(member_i)
 
