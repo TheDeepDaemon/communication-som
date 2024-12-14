@@ -12,3 +12,6 @@ The variable `SOCIAL_ENTITY_TYPE` can be set to `'standard'` or `'invertible'`. 
 
 ### Synthetic Data
 For faster processing and to allow for smaller model sizes, an option was added to run the model with data that is simulated. This can be adjusted with the variable `USE_SYNTHETIC_DATA`. By default, it is set to true. 
+
+### Calculating P-Values
+The p-values mentioned in the paper were calculated by running the "welch_t_test.py" file.
